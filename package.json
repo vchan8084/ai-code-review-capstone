@@ -1,6 +1,6 @@
 {
   "name": "ai-code-review-capstone",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
     "@eslint/js": "^9.39.5",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^13.0.3",
