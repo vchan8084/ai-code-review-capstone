@@ -35,6 +35,12 @@ export default function Navbar() {
                 >
                   Submit Code
                 </Link>
+                <Link
+                  href="/evaluate"
+                  className="text-sm text-gray-600 hover:text-gray-900"
+                >
+                  Evaluate
+                </Link>
               </>
             )}
           </div>

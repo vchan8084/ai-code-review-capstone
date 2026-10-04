@@ -53,6 +53,9 @@ function initializeSchema(db: Database.Database): void {
       end_line        INTEGER,
       end_column      INTEGER,
       suggestion      TEXT,
+      risk_level      TEXT    DEFAULT 'low',
+      category        TEXT,
+      confidence      REAL    DEFAULT 0.95,
       created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (submission_id) REFERENCES submissions(id)
     );

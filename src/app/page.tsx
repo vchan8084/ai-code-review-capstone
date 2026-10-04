@@ -25,9 +25,9 @@ export default function Home() {
         AI-Assisted Code Review
       </h1>
       <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto">
-        Submit JavaScript code for automated static analysis. Get instant
-        feedback on potential bugs, code quality issues, and security
-        vulnerabilities.
+        Submit JavaScript code for automated analysis powered by ESLint and
+        Claude AI. Get instant feedback on bugs, code quality issues, and
+        security vulnerabilities with risk-level scoring.
       </p>
       <div className="flex gap-4 justify-center">
         <Link

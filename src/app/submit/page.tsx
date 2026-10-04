@@ -49,9 +49,9 @@ export default function SubmitPage() {
           Submit Code for Review
         </h1>
         <p className="text-sm text-gray-500 mb-6">
-          Paste your JavaScript code below. It will be analyzed using static
-          analysis tools to identify potential bugs, code quality issues, and
-          security vulnerabilities.
+          Paste your JavaScript code below. It will be analyzed using ESLint
+          static analysis and Claude AI to identify potential bugs, code quality
+          issues, and security vulnerabilities with risk-level scoring.
         </p>
 
         {error && (

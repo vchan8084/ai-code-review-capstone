@@ -1,12 +1,14 @@
 import { analyzeWithEslint } from "./eslint-analyzer";
-import type { AnalysisFinding } from "@/types";
+import { analyzeWithLlm } from "./llm-analyzer";
+import { deduplicateAndScoreFindings } from "./risk-scorer";
+import type { AnalysisResult } from "@/types";
 
-export async function analyzeCode(code: string): Promise<AnalysisFinding[]> {
-  const eslintFindings = await analyzeWithEslint(code);
+export async function analyzeCode(code: string): Promise<AnalysisResult> {
+  const [eslintFindings, llmFindings] = await Promise.all([
+    analyzeWithEslint(code),
+    analyzeWithLlm(code),
+  ]);
 
-  // v2: Add LLM analysis here
-  // const llmFindings = await analyzeWithLlm(code);
-  // return [...eslintFindings, ...llmFindings];
-
-  return eslintFindings;
+  const allFindings = [...eslintFindings, ...llmFindings];
+  return deduplicateAndScoreFindings(allFindings);
 }

@@ -9,7 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.131.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.1146.0",
     "@eslint/js": "^9.39.5",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^13.0.3",

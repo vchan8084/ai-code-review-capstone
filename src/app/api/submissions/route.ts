@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/middleware";
 import { getDb } from "@/lib/db";
 import { analyzeCode } from "@/lib/analysis";
-import type { AnalysisFinding, Submission } from "@/types";
+import type { AnalysisResult, Submission } from "@/types";
 
 export async function POST(request: NextRequest) {
   const user = await getAuthenticatedUser(request);
@@ -28,35 +28,53 @@ export async function POST(request: NextRequest) {
   const result = insertSubmission.run(user.id, code);
   const submissionId = result.lastInsertRowid as number;
 
-  let findings: AnalysisFinding[] = [];
+  let analysisResult: AnalysisResult = {
+    findings: [],
+    risk_summary: {
+      overall_risk: "none",
+      critical_count: 0,
+      high_count: 0,
+      medium_count: 0,
+      low_count: 0,
+      total_findings: 0,
+      eslint_count: 0,
+      llm_count: 0,
+      deduplicated_count: 0,
+    },
+  };
   let status: string = "completed";
 
   try {
-    findings = await analyzeCode(code);
+    analysisResult = await analyzeCode(code);
 
     const insertFinding = db.prepare(
-      `INSERT INTO findings (submission_id, source, rule_id, severity, message, line, col, end_line, end_column, suggestion)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO findings (submission_id, source, rule_id, severity, message, line, col, end_line, end_column, suggestion, risk_level, category, confidence)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     );
 
-    const insertMany = db.transaction((items: AnalysisFinding[]) => {
-      for (const f of items) {
-        insertFinding.run(
-          submissionId,
-          f.source,
-          f.rule_id,
-          f.severity,
-          f.message,
-          f.line,
-          f.column,
-          f.end_line,
-          f.end_column,
-          f.suggestion
-        );
+    const insertMany = db.transaction(
+      (items: AnalysisResult["findings"]) => {
+        for (const f of items) {
+          insertFinding.run(
+            submissionId,
+            f.source,
+            f.rule_id,
+            f.severity,
+            f.message,
+            f.line,
+            f.column,
+            f.end_line,
+            f.end_column,
+            f.suggestion,
+            f.risk_level ?? "low",
+            f.category ?? null,
+            f.confidence ?? 0.95
+          );
+        }
       }
-    });
+    );
 
-    insertMany(findings);
+    insertMany(analysisResult.findings);
   } catch {
     status = "error";
   }
@@ -74,7 +92,13 @@ export async function POST(request: NextRequest) {
     .all(submissionId);
 
   return NextResponse.json(
-    { submission: { ...submission, findings: savedFindings } },
+    {
+      submission: {
+        ...submission,
+        findings: savedFindings,
+        risk_summary: analysisResult.risk_summary,
+      },
+    },
     { status: 201 }
   );
 }
