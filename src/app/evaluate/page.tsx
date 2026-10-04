@@ -18,6 +18,10 @@ export default function EvaluatePage() {
     eslint_only: AggregateMetrics;
     combined: AggregateMetrics;
   } | null>(null);
+  const [llmStatus, setLlmStatus] = useState<{
+    total_findings: number;
+    errors: { test_case: string; error: string }[];
+  } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -33,6 +37,7 @@ export default function EvaluatePage() {
       const data = await res.json();
       setResults(data.results);
       setAggregate(data.aggregate);
+      setLlmStatus(data.llm_status ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Evaluation failed");
     } finally {
@@ -75,6 +80,25 @@ export default function EvaluatePage() {
           </div>
         )}
 
+        {llmStatus && llmStatus.errors.length > 0 && (
+          <div className="mb-4 rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+            <span className="font-medium">LLM analysis failed</span> for{" "}
+            {llmStatus.errors.length} test case
+            {llmStatus.errors.length !== 1 ? "s" : ""}. Combined results
+            reflect ESLint only. Error:{" "}
+            {llmStatus.errors[0].error}
+          </div>
+        )}
+
+        {llmStatus &&
+          llmStatus.errors.length === 0 &&
+          llmStatus.total_findings === 0 && (
+            <div className="mb-4 rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+              <span className="font-medium">LLM returned no findings</span>{" "}
+              across all test cases. Combined results may match ESLint-only.
+            </div>
+          )}
+
         {loading && <LoadingSpinner />}
 
         {aggregate && (
@@ -114,6 +138,22 @@ export default function EvaluatePage() {
                       ({r.expected_count} expected finding
                       {r.expected_count !== 1 ? "s" : ""})
                     </span>
+                    {r.llm_error && (
+                      <span className="text-xs font-normal text-amber-600 ml-2">
+                        — LLM failed
+                      </span>
+                    )}
+                    {!r.llm_error && r.llm_finding_count === 0 && (
+                      <span className="text-xs font-normal text-amber-600 ml-2">
+                        — LLM: 0 findings
+                      </span>
+                    )}
+                    {!r.llm_error && r.llm_finding_count > 0 && (
+                      <span className="text-xs font-normal text-green-600 ml-2">
+                        — LLM: {r.llm_finding_count} finding
+                        {r.llm_finding_count !== 1 ? "s" : ""}
+                      </span>
+                    )}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="bg-gray-50 rounded-lg p-3">

@@ -39,35 +39,29 @@ export async function analyzeWithLlm(
 
   const client = new BedrockRuntimeClient({ region });
 
-  let text: string;
-  try {
-    const res = await client.send(
-      new ConverseCommand({
-        modelId,
-        system: [{ text: ANALYSIS_PROMPT }],
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                text: `Code to review:\n\`\`\`javascript\n${code}\n\`\`\``,
-              },
-            ],
-          },
-        ],
-        inferenceConfig: { maxTokens: 2048 },
-      })
-    );
+  const res = await client.send(
+    new ConverseCommand({
+      modelId,
+      system: [{ text: ANALYSIS_PROMPT }],
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              text: `Code to review:\n\`\`\`javascript\n${code}\n\`\`\``,
+            },
+          ],
+        },
+      ],
+      inferenceConfig: { maxTokens: 2048 },
+    })
+  );
 
-    const blocks = res.output?.message?.content ?? [];
-    text = blocks
-      .filter((b): b is { text: string } => "text" in b && typeof b.text === "string")
-      .map((b) => b.text)
-      .join("");
-  } catch (err) {
-    console.error("Bedrock call failed, skipping LLM analysis:", err);
-    return [];
-  }
+  const blocks = res.output?.message?.content ?? [];
+  const text = blocks
+    .filter((b): b is { text: string } => "text" in b && typeof b.text === "string")
+    .map((b) => b.text)
+    .join("");
 
   if (!text) return [];
 
@@ -77,11 +71,14 @@ export async function analyzeWithLlm(
   try {
     parsed = JSON.parse(cleaned);
   } catch {
-    console.error("Failed to parse LLM response:", cleaned.slice(0, 200));
-    return [];
+    throw new Error(
+      `Failed to parse LLM response as JSON: ${cleaned.slice(0, 200)}`
+    );
   }
 
-  if (!Array.isArray(parsed)) return [];
+  if (!Array.isArray(parsed)) {
+    throw new Error("LLM response was not a JSON array");
+  }
 
   return parsed.map((f) => ({
     source: "llm" as const,

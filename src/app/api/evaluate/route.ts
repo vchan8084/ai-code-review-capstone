@@ -39,6 +39,14 @@ export async function POST(request: NextRequest) {
       ? combinedTotals.tp / (combinedTotals.tp + combinedTotals.fn)
       : 0;
 
+  const llmErrors = results
+    .filter((r) => r.llm_error)
+    .map((r) => ({ test_case: r.test_case, error: r.llm_error }));
+  const totalLlmFindings = results.reduce(
+    (sum, r) => sum + r.llm_finding_count,
+    0
+  );
+
   return NextResponse.json({
     results,
     aggregate: {
@@ -66,6 +74,10 @@ export async function POST(request: NextRequest) {
               ) / 1000
             : 0,
       },
+    },
+    llm_status: {
+      total_findings: totalLlmFindings,
+      errors: llmErrors,
     },
   });
 }

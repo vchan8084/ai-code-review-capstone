@@ -102,7 +102,7 @@ switch (action) {
   },
 ];
 
-function matchFinding(
+export function matchFinding(
   finding: AnalysisFinding,
   expected: ExpectedFinding
 ): boolean {
@@ -130,7 +130,7 @@ function matchFinding(
   return false;
 }
 
-function computeMetrics(
+export function computeMetrics(
   findings: AnalysisFinding[],
   expected: ExpectedFinding[]
 ): EvaluationMetrics {
@@ -174,7 +174,16 @@ export async function runEvaluation(): Promise<EvaluationResult[]> {
 
   for (const testCase of TEST_CASES) {
     const eslintFindings = await analyzeWithEslint(testCase.code);
-    const llmFindings = await analyzeWithLlm(testCase.code);
+
+    let llmFindings: Awaited<ReturnType<typeof analyzeWithLlm>> = [];
+    let llmError: string | undefined;
+    try {
+      llmFindings = await analyzeWithLlm(testCase.code);
+    } catch (err) {
+      llmError =
+        err instanceof Error ? err.message : "LLM analysis failed";
+    }
+
     const combined = [...eslintFindings, ...llmFindings];
     const { findings: scoredFindings } =
       deduplicateAndScoreFindings(combined);
@@ -186,6 +195,8 @@ export async function runEvaluation(): Promise<EvaluationResult[]> {
       eslint_findings: eslintFindings,
       combined_findings: scoredFindings,
       expected_count: testCase.expected_findings.length,
+      llm_finding_count: llmFindings.length,
+      llm_error: llmError,
     });
   }
 

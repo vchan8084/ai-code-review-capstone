@@ -110,4 +110,6 @@ export interface EvaluationResult {
   eslint_findings: AnalysisFinding[];
   combined_findings: AnalysisFinding[];
   expected_count: number;
+  llm_finding_count: number;
+  llm_error?: string;
 }
