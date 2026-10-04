@@ -5,10 +5,10 @@ import { useParams } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CodeEditor from "@/components/CodeEditor";
 import FindingsTable from "@/components/FindingsTable";
-import FindingSeverityBadge from "@/components/FindingSeverityBadge";
+import RiskSummary from "@/components/RiskSummary";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import Link from "next/link";
-import type { SubmissionWithFindings } from "@/types";
+import type { SubmissionWithFindings, RiskSummary as RiskSummaryType } from "@/types";
 
 export default function SubmissionDetailPage() {
   const { id } = useParams();
@@ -28,6 +28,10 @@ export default function SubmissionDetailPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const riskSummary: RiskSummaryType | null = submission
+    ? buildRiskSummary(submission)
+    : null;
 
   return (
     <ProtectedRoute>
@@ -69,35 +73,14 @@ export default function SubmissionDetailPage() {
               </div>
             </div>
 
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">
-                Summary
-              </h2>
-              <div className="flex gap-4">
-                {[2, 1].map((sev) => {
-                  const count = submission.findings.filter(
-                    (f) => f.severity === sev
-                  ).length;
-                  return (
-                    <div
-                      key={sev}
-                      className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2"
-                    >
-                      <FindingSeverityBadge severity={sev} />
-                      <span className="text-lg font-semibold text-gray-900">
-                        {count}
-                      </span>
-                    </div>
-                  );
-                })}
-                <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2">
-                  <span className="text-sm text-gray-500">Total</span>
-                  <span className="text-lg font-semibold text-gray-900">
-                    {submission.findings.length}
-                  </span>
-                </div>
+            {riskSummary && (
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                  Risk Assessment
+                </h2>
+                <RiskSummary summary={riskSummary} />
               </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
@@ -124,4 +107,41 @@ export default function SubmissionDetailPage() {
       </div>
     </ProtectedRoute>
   );
+}
+
+function buildRiskSummary(submission: SubmissionWithFindings): RiskSummaryType {
+  const findings = submission.findings;
+  const counts = { critical: 0, high: 0, medium: 0, low: 0 };
+  let eslintCount = 0;
+  let llmCount = 0;
+
+  for (const f of findings) {
+    const level = f.risk_level ?? "low";
+    if (level in counts) counts[level as keyof typeof counts]++;
+    if (f.source === "eslint") eslintCount++;
+    else llmCount++;
+  }
+
+  const overall: RiskSummaryType["overall_risk"] =
+    findings.length === 0
+      ? "none"
+      : counts.critical > 0
+        ? "critical"
+        : counts.high > 0
+          ? "high"
+          : counts.medium > 0
+            ? "medium"
+            : "low";
+
+  return {
+    overall_risk: overall,
+    critical_count: counts.critical,
+    high_count: counts.high,
+    medium_count: counts.medium,
+    low_count: counts.low,
+    total_findings: findings.length,
+    eslint_count: eslintCount,
+    llm_count: llmCount,
+    deduplicated_count: 0,
+  };
 }

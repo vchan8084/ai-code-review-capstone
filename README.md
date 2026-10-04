@@ -11,6 +11,7 @@ Users submit JavaScript code through a web interface, and the system runs ESLint
 - **Database**: SQLite via better-sqlite3
 - **Authentication**: Custom JWT with httpOnly cookies (bcryptjs + jose)
 - **Static Analysis**: ESLint 9 (flat config, Node API)
+- **LLM Analysis**: Claude via AWS Bedrock
 
 ## System Architecture
 
@@ -60,7 +61,11 @@ Create a `.env.local` file in the project root:
 
 ```
 JWT_SECRET=your-secret-key-at-least-32-characters
+AWS_REGION=us-east-1
+BEDROCK_MODEL_ID=us.anthropic.claude-sonnet-4-20250514-v1:0
 ```
+
+The LLM analysis layer uses Claude on AWS Bedrock, so you must have valid AWS credentials (e.g., via `aws sso login`) before starting the dev server. If credentials are missing or expired, the system falls back to ESLint-only analysis.
 
 ### Running Locally
 
