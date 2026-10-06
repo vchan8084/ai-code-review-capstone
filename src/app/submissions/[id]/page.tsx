@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CodeEditor from "@/components/CodeEditor";
 import FindingsTable from "@/components/FindingsTable";
+import FindingsCharts from "@/components/FindingsCharts";
 import RiskSummary from "@/components/RiskSummary";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import Link from "next/link";
@@ -79,6 +80,15 @@ export default function SubmissionDetailPage() {
                   Risk Assessment
                 </h2>
                 <RiskSummary summary={riskSummary} />
+              </div>
+            )}
+
+            {submission.findings.length > 0 && (
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-2">
+                  Distribution
+                </h2>
+                <FindingsCharts findings={submission.findings} />
               </div>
             )}
 
