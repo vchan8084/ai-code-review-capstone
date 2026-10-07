@@ -41,6 +41,12 @@ export default function Navbar() {
                 >
                   Evaluate
                 </Link>
+                <Link
+                  href="/results"
+                  className="text-sm text-gray-600 hover:text-gray-900"
+                >
+                  Results
+                </Link>
               </>
             )}
           </div>

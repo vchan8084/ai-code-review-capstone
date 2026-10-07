@@ -336,20 +336,28 @@ export async function runEvaluation(): Promise<EvaluationResult[]> {
   const results: EvaluationResult[] = [];
 
   for (const testCase of TEST_CASES) {
+    const totalStart = performance.now();
+
+    const eslintStart = performance.now();
     const eslintFindings = await analyzeWithEslint(testCase.code);
+    const eslintLatency = performance.now() - eslintStart;
 
     let llmFindings: Awaited<ReturnType<typeof analyzeWithLlm>> = [];
     let llmError: string | undefined;
+    const llmStart = performance.now();
     try {
       llmFindings = await analyzeWithLlm(testCase.code);
     } catch (err) {
       llmError =
         err instanceof Error ? err.message : "LLM analysis failed";
     }
+    const llmLatency = performance.now() - llmStart;
 
     const combined = [...eslintFindings, ...llmFindings];
     const { findings: scoredFindings } =
       deduplicateAndScoreFindings(combined);
+
+    const totalLatency = performance.now() - totalStart;
 
     results.push({
       test_case: testCase.name,
@@ -360,6 +368,9 @@ export async function runEvaluation(): Promise<EvaluationResult[]> {
       expected_count: testCase.expected_findings.length,
       llm_finding_count: llmFindings.length,
       llm_error: llmError,
+      eslint_latency_ms: Math.round(eslintLatency),
+      llm_latency_ms: Math.round(llmLatency),
+      total_latency_ms: Math.round(totalLatency),
     });
   }
 

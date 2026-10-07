@@ -47,6 +47,10 @@ export async function POST(request: NextRequest) {
     0
   );
 
+  const eslintLatencies = results.map((r) => r.eslint_latency_ms);
+  const llmLatencies = results.map((r) => r.llm_latency_ms);
+  const totalLatencies = results.map((r) => r.total_latency_ms);
+
   return NextResponse.json({
     results,
     aggregate: {
@@ -74,6 +78,15 @@ export async function POST(request: NextRequest) {
               ) / 1000
             : 0,
       },
+    },
+    latency: {
+      eslint_avg_ms: Math.round(eslintLatencies.reduce((a, b) => a + b, 0) / eslintLatencies.length),
+      llm_avg_ms: Math.round(llmLatencies.reduce((a, b) => a + b, 0) / llmLatencies.length),
+      total_avg_ms: Math.round(totalLatencies.reduce((a, b) => a + b, 0) / totalLatencies.length),
+      eslint_min_ms: Math.min(...eslintLatencies),
+      eslint_max_ms: Math.max(...eslintLatencies),
+      llm_min_ms: Math.min(...llmLatencies),
+      llm_max_ms: Math.max(...llmLatencies),
     },
     llm_status: {
       total_findings: totalLlmFindings,
