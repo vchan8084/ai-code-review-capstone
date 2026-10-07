@@ -100,6 +100,169 @@ switch (action) {
       { category: "quality", line: 15, description: "unused variable or reassignment" },
     ],
   },
+  {
+    name: "Duplicate keys, NaN comparison, and duplicate cases",
+    code: `function configure(timeout) {
+  var settings = {
+    timeout: timeout,
+    retries: 3,
+    timeout: 5000,
+  };
+  return settings;
+}
+
+function isValid(value) {
+  if (value === NaN) {
+    return false;
+  }
+  return value > 0;
+}
+
+function getLabel(code) {
+  switch (code) {
+    case 200:
+      return "OK";
+    case 404:
+      return "Not Found";
+    case 200:
+      return "Success";
+    default:
+      return "Unknown";
+  }
+}`,
+    expected_findings: [
+      { category: "bug", line: 5, description: "duplicate key" },
+      { category: "bug", line: 11, description: "comparison with NaN" },
+      { category: "bug", line: 23, description: "duplicate case" },
+    ],
+  },
+  {
+    name: "Function reassignment and exception handling",
+    code: `function processData(input) {
+  return input * 2;
+}
+
+processData = "not a function";
+
+function handleJson(value) {
+  try {
+    return JSON.parse(value);
+  } catch (err) {
+    err = "something went wrong";
+    console.log(err);
+  }
+}
+
+function outer(flag) {
+  if (flag) {
+    function inner() {
+      return 42;
+    }
+    return inner();
+  }
+  return 0;
+}`,
+    expected_findings: [
+      { category: "bug", line: 5, description: "function reassignment" },
+      { category: "bug", line: 11, description: "exception variable reassignment" },
+      { category: "bug", line: 19, description: "inner function declaration" },
+    ],
+  },
+  {
+    name: "Self-comparison, self-assignment, and extra boolean cast",
+    code: `function checkValue(x) {
+  if (x === x) {
+    return true;
+  }
+
+  var result = x * 2;
+  result = result;
+
+  if (!!!result) {
+    return false;
+  }
+
+  return result;
+}`,
+    expected_findings: [
+      { category: "quality", line: 2, description: "self-comparison" },
+      { category: "quality", line: 7, description: "self-assignment" },
+      { category: "quality", line: 9, description: "extra boolean cast" },
+    ],
+  },
+  {
+    name: "XSS and DOM injection vulnerabilities",
+    code: `function renderComment(userComment) {
+  document.getElementById("output").innerHTML = userComment;
+  document.write("<div>" + userComment + "</div>");
+
+  var element = document.createElement("div");
+  element.innerHTML = "<img src=x onerror='" + userComment + "'>";
+  document.body.appendChild(element);
+}
+
+function loadScript(src) {
+  var script = document.createElement("script");
+  script.src = src;
+  document.head.appendChild(script);
+}`,
+    expected_findings: [
+      { category: "security", line: 2, description: "XSS via innerHTML" },
+      { category: "security", line: 3, description: "XSS via document.write" },
+      { category: "security", line: 6, description: "XSS via innerHTML with event handler" },
+      { category: "security", line: 12, description: "dynamic script loading" },
+    ],
+  },
+  {
+    name: "Missing await and async iteration anti-patterns",
+    code: `async function fetchUserData(userId) {
+  var response = fetch("/api/users/" + userId);
+  var data = response.json();
+  return data;
+}
+
+function processAll(items) {
+  var results = [];
+  items.forEach(async function(item) {
+    var resp = await fetch("/api/process/" + item);
+    results.push(resp);
+  });
+  return results;
+}`,
+    expected_findings: [
+      { category: "bug", line: 2, description: "missing await on fetch" },
+      { category: "bug", line: 3, description: "calling method on unresolved promise" },
+      { category: "bug", line: 9, description: "async callback in forEach" },
+    ],
+  },
+  {
+    name: "Type coercion traps and invalid typeof",
+    code: `function processValue(input) {
+  if (input == null) {
+    return "empty";
+  }
+
+  if (input == 0) {
+    return "zero";
+  }
+
+  if (input == false) {
+    return "falsy";
+  }
+
+  if (typeof input === "strang") {
+    return input.toUpperCase();
+  }
+
+  return String(input);
+}`,
+    expected_findings: [
+      { category: "quality", line: 2, description: "loose equality" },
+      { category: "quality", line: 6, description: "loose equality" },
+      { category: "quality", line: 10, description: "loose equality" },
+      { category: "bug", line: 14, description: "invalid typeof comparison" },
+    ],
+  },
 ];
 
 export function matchFinding(
