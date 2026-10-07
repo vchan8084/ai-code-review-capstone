@@ -2,7 +2,7 @@
 
 A web-based prototype that combines static analysis with AI-based techniques to review JavaScript source code for potential defects, code quality issues, and security vulnerabilities. Built as a capstone project (MSIT 5910) at the University of the People.
 
-Users submit JavaScript code through a web interface, and the system runs ESLint-based static analysis to identify issues. Results are displayed with severity ratings, rule explanations, and line-level annotations.
+Users submit JavaScript code through a web interface, and the system runs both ESLint-based static analysis and LLM-powered analysis (Claude via AWS Bedrock) to identify issues. Findings from both engines are aggregated, deduplicated, and scored for risk. Results are displayed with severity ratings, rule explanations, and line-level annotations.
 
 ## Tech Stack
 
@@ -21,20 +21,20 @@ The system follows a four-layer modular architecture:
 ┌─────────────────────────────────────────────┐
 │           User Interface Layer              │
 │   Landing Page · Dashboard · Code Editor    │
-│              Results View                   │
+│     Results View · Evaluation Dashboard     │
 ├─────────────────────────────────────────────┤
 │           Application Layer                 │
 │   Authentication    Code Analysis Service   │
 │   & Access Control  (orchestrator)          │
 ├─────────────────────────────────────────────┤
 │            Analysis Layer                   │
-│   Static Analysis Module (ESLint)           │
-│   [v2: LLM Analysis Module]                │
-│   [v2: Finding Aggregation & Risk Scoring]  │
+│   Static Analysis (ESLint)                  │
+│   LLM Analysis (Claude via Bedrock)         │
+│   Finding Aggregation & Risk Scoring        │
 ├─────────────────────────────────────────────┤
 │         Data & Evaluation Layer             │
 │   SQLite (users, submissions, findings)     │
-│   [v2: Evaluation Module]                   │
+│   Evaluation Module                         │
 └─────────────────────────────────────────────┘
 ```
 
@@ -44,8 +44,10 @@ See `docs/system diagram.png` for the full UML component diagram.
 
 ### Prerequisites
 
-- Node.js 18+
-- npm
+- **Node.js** 18+ (tested on 22.x)
+- **npm**
+- **AWS CLI** — required for LLM analysis via Bedrock (install from [aws.amazon.com/cli](https://aws.amazon.com/cli/))
+- **C++ build tools** — `better-sqlite3` is a native module. On macOS, Xcode Command Line Tools (`xcode-select --install`) are required. On Linux, `build-essential` and `python3` are needed. On Windows, install the [windows-build-tools](https://github.com/nicedoc/windows-build-tools) package or Visual Studio Build Tools.
 
 ### Installation
 
@@ -65,6 +67,12 @@ AWS_REGION=us-east-1
 BEDROCK_MODEL_ID=us.anthropic.claude-sonnet-4-20250514-v1:0
 ```
 
+| Variable | Required | Description |
+|----------|:--------:|-------------|
+| `JWT_SECRET` | Yes | Secret key for signing JWTs (minimum 32 characters) |
+| `AWS_REGION` | Yes | AWS region where Bedrock is enabled |
+| `BEDROCK_MODEL_ID` | Yes | Claude model ID on Bedrock |
+
 The LLM analysis layer uses Claude on AWS Bedrock, so you must have valid AWS credentials (e.g., via `aws sso login`) before starting the dev server. If credentials are missing or expired, the system falls back to ESLint-only analysis.
 
 ### Running Locally
@@ -76,6 +84,21 @@ npm run dev
 The app starts at [http://localhost:3000](http://localhost:3000).
 
 The SQLite database (`data/reviews.db`) is created automatically on first request.
+
+### Build and Deploy
+
+```bash
+npm run build          # Production build
+npm run start          # Start production server (requires build first)
+```
+
+### Testing and Linting
+
+```bash
+npm run test           # Run tests once (Vitest)
+npm run test:watch     # Run tests in watch mode
+npm run lint           # Run ESLint
+```
 
 ## Authentication
 
@@ -110,27 +133,47 @@ The app uses JWT-based authentication with httpOnly cookies. No OAuth or third-p
 | POST | `/api/submissions` | Yes | Submit code for analysis |
 | GET | `/api/submissions` | Yes | List your submissions |
 | GET | `/api/submissions/:id` | Yes | View submission with findings |
+| POST | `/api/evaluate` | Yes | Run evaluation suite against test cases |
 
 ## Project Structure
 
 ```
 src/
-  app/                        # Next.js App Router pages and API routes
-  components/                 # React components (Navbar, CodeEditor, FindingsTable, etc.)
+  app/                          # Next.js App Router pages and API routes
+    api/
+      auth/                     # Register, login, logout, me endpoints
+      submissions/              # Submit code, list/view submissions
+      evaluate/                 # Run evaluation suite
+    dashboard/                  # User dashboard
+    submit/                     # Code submission page
+    submissions/[id]/           # Individual submission results
+    evaluate/                   # Evaluation dashboard
+    results/                    # Aggregated results view
+    login/ register/            # Auth pages
+  components/                   # React components
+    AuthProvider.tsx             # Client-side auth context
+    CodeEditor.tsx              # Syntax-highlighted code input
+    FindingsTable.tsx           # Tabular findings display
+    FindingsCharts.tsx          # Visual charts (Recharts)
+    RiskSummary.tsx             # Risk score breakdown
+    Navbar.tsx                  # Navigation bar
+    ProtectedRoute.tsx          # Auth guard wrapper
   lib/
-    auth.ts                   # Password hashing and JWT utilities
-    db.ts                     # SQLite connection and schema initialization
-    middleware.ts             # Auth middleware for API routes
+    auth.ts                     # Password hashing and JWT utilities
+    db.ts                       # SQLite connection and schema initialization
+    middleware.ts               # Auth middleware for API routes
     analysis/
-      index.ts                # Analysis orchestrator
-      eslint-analyzer.ts      # ESLint programmatic analysis
+      index.ts                  # Analysis orchestrator
+      eslint-analyzer.ts        # ESLint programmatic analysis
+      llm-analyzer.ts           # Claude (Bedrock) analysis
+      risk-scorer.ts            # Finding aggregation and risk scoring
+      evaluation.ts             # Evaluation module
+      __tests__/                # Unit tests (Vitest)
   types/
-    index.ts                  # Shared TypeScript interfaces
-eslint-config/
-  submission.config.mjs       # ESLint rules for analyzing submitted code
+    index.ts                    # Shared TypeScript interfaces
 data/
-  reviews.db                  # SQLite database (created at runtime, gitignored)
+  submission.config.mjs         # ESLint rules for analyzing submitted code
+  reviews.db                    # SQLite database (created at runtime, gitignored)
 docs/
-  system diagram.png          # UML component diagram
-  V1 Implementation Plan.md   # Detailed implementation plan
+  system diagram.png            # UML component diagram
 ```
