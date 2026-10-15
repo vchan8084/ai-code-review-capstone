@@ -7,9 +7,12 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import Link from "next/link";
 import type { SubmissionWithCount } from "@/types";
 
+const PAGE_SIZE = 5;
+
 export default function DashboardPage() {
   const [submissions, setSubmissions] = useState<SubmissionWithCount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     fetch("/api/submissions", { credentials: "include" })
@@ -17,6 +20,12 @@ export default function DashboardPage() {
       .then((data) => setSubmissions(data.submissions ?? []))
       .finally(() => setLoading(false));
   }, []);
+
+  const totalPages = Math.max(1, Math.ceil(submissions.length / PAGE_SIZE));
+  const paginated = submissions.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
 
   return (
     <ProtectedRoute>
@@ -44,11 +53,49 @@ export default function DashboardPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-3">
-            {submissions.map((s) => (
-              <SubmissionCard key={s.id} submission={s} />
-            ))}
-          </div>
+          <>
+            <div className="space-y-3">
+              {paginated.map((s) => (
+                <SubmissionCard key={s.id} submission={s} />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-6">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setPage(i + 1)}
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+                      page === i + 1
+                        ? "bg-blue-600 text-white"
+                        : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+
+            <p className="text-center text-xs text-gray-400 mt-2">
+              {submissions.length} submission{submissions.length !== 1 ? "s" : ""}
+            </p>
+          </>
         )}
       </div>
     </ProtectedRoute>

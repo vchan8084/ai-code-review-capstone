@@ -112,4 +112,7 @@ export interface EvaluationResult {
   expected_count: number;
   llm_finding_count: number;
   llm_error?: string;
+  eslint_latency_ms: number;
+  llm_latency_ms: number;
+  total_latency_ms: number;
 }

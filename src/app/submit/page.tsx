@@ -5,16 +5,31 @@ import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CodeEditor from "@/components/CodeEditor";
 
+const MAX_CHARS = 50_000;
+const MAX_LINES = 2_000;
+
 export default function SubmitPage() {
   const router = useRouter();
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const charCount = code.length;
+  const lineCount = code.split("\n").length;
+  const overChar = charCount > MAX_CHARS;
+  const overLine = lineCount > MAX_LINES;
+  const overLimit = overChar || overLine;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!code.trim()) {
       setError("Please enter some JavaScript code");
+      return;
+    }
+    if (overLimit) {
+      setError(
+        `Code exceeds the size limit (${MAX_CHARS.toLocaleString()} characters / ${MAX_LINES.toLocaleString()} lines)`
+      );
       return;
     }
 
@@ -62,13 +77,21 @@ export default function SubmitPage() {
 
         <form onSubmit={handleSubmit}>
           <CodeEditor value={code} onChange={setCode} />
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-2 flex items-center gap-3 text-xs">
+            <span className={overChar ? "text-red-600 font-medium" : "text-gray-400"}>
+              {charCount.toLocaleString()} / {MAX_CHARS.toLocaleString()} chars
+            </span>
+            <span className={overLine ? "text-red-600 font-medium" : "text-gray-400"}>
+              {lineCount.toLocaleString()} / {MAX_LINES.toLocaleString()} lines
+            </span>
+          </div>
+          <div className="mt-3 flex items-center justify-between">
             <p className="text-xs text-gray-400">
               Only JavaScript code is supported.
             </p>
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || overLimit}
               className="rounded-md bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
               {submitting ? "Analyzing..." : "Submit for Review"}
