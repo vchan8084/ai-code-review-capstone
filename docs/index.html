@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="AI-Assisted Code Review — static analysis and LLM-powered review for JavaScript (MSIT 5910 capstone)."
+    />
+    <title>AI-Assisted Code Review</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #0f1419;
+        --surface: #1a2332;
+        --border: #2d3a4f;
+        --text: #e7ecf3;
+        --muted: #9aa8bc;
+        --accent: #3b82f6;
+        --accent-hover: #60a5fa;
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f4f6f9;
+          --surface: #ffffff;
+          --border: #d8dee9;
+          --text: #1a2332;
+          --muted: #5c6b7f;
+          --accent: #2563eb;
+          --accent-hover: #1d4ed8;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        line-height: 1.6;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      .wrap {
+        max-width: 52rem;
+        margin: 0 auto;
+        padding: 2.5rem 1.25rem 4rem;
+      }
+
+      header {
+        margin-bottom: 2rem;
+      }
+
+      h1 {
+        font-size: clamp(1.75rem, 4vw, 2.25rem);
+        font-weight: 700;
+        line-height: 1.2;
+        margin: 0 0 0.75rem;
+      }
+
+      .tagline {
+        color: var(--muted);
+        font-size: 1.05rem;
+        margin: 0 0 1rem;
+      }
+
+      .meta {
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.25rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        margin: 0 0 0.75rem;
+      }
+
+      p {
+        margin: 0 0 0.75rem;
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 1.25rem;
+      }
+
+      li + li {
+        margin-top: 0.35rem;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      a:hover {
+        color: var(--accent-hover);
+        text-decoration: underline;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.25rem;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 0.55rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text);
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+
+      .btn-primary:hover {
+        background: var(--accent-hover);
+        border-color: var(--accent-hover);
+        color: #fff;
+        text-decoration: none;
+      }
+
+      .btn:hover {
+        text-decoration: none;
+      }
+
+      figure {
+        margin: 1rem 0 0;
+      }
+
+      figure img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+      }
+
+      figcaption {
+        font-size: 0.85rem;
+        color: var(--muted);
+        margin-top: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>AI-Assisted Code Review</h1>
+        <p class="tagline">
+          A web prototype combining ESLint static analysis with Claude (AWS Bedrock)
+          to review JavaScript for defects, quality issues, and security risks.
+        </p>
+        <p class="meta">MSIT 5910 capstone · University of the People</p>
+        <div class="actions">
+          <a
+            class="btn btn-primary"
+            href="https://github.com/vchan8084/ai-code-review-capstone"
+            rel="noopener noreferrer"
+            >View repository</a
+          >
+          <a class="btn" href="https://github.com/vchan8084/ai-code-review-capstone#readme"
+            >README &amp; setup</a
+          >
+        </div>
+      </header>
+
+      <section id="deliverables">
+        <h2>Capstone deliverables</h2>
+        <p>
+          This repository includes the items required for MSIT 5910 delivery:
+        </p>
+        <ul>
+          <li>
+            <strong>JavaScript source code</strong> —
+            <a href="https://github.com/vchan8084/ai-code-review-capstone/tree/main/src"
+              >application source in <code>src/</code></a
+            >
+            (Next.js/TypeScript prototype that analyzes submitted JavaScript)
+          </li>
+          <li>
+            <strong>Project README</strong> —
+            <a href="https://github.com/vchan8084/ai-code-review-capstone#readme"
+              >repository README</a
+            >
+          </li>
+          <li>
+            <strong>System architecture diagram</strong> —
+            <a href="system%20diagram.png">UML component diagram</a> (below)
+          </li>
+          <li>
+            <strong>Functional and non-functional requirements</strong> —
+            <a href="Functional%20and%20Non-Functional%20Requirements.md"
+              >requirements document</a
+            >
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Project documentation</h2>
+        <ul>
+          <li>
+            <a href="Functional%20and%20Non-Functional%20Requirements.md"
+              >Functional and Non-Functional Requirements</a
+            >
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Architecture</h2>
+        <figure>
+          <img
+            src="system%20diagram.png"
+            width="800"
+            height="600"
+            alt="UML component diagram of the AI-assisted code review system"
+          />
+          <figcaption>System component diagram (see repository <code>docs/</code>).</figcaption>
+        </figure>
+      </section>
+    </div>
+  </body>
+</html>

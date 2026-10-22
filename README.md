@@ -40,6 +40,17 @@ The system follows a four-layer modular architecture:
 
 See `docs/system diagram.png` for the full UML component diagram.
 
+## Capstone deliverables
+
+| Deliverable | Location |
+|-------------|----------|
+| JavaScript-oriented application source code | `src/` (TypeScript/Next.js; analyzes user-submitted JavaScript) and `data/submission.config.mjs` |
+| Project README | This file |
+| System architecture diagram | [`docs/system diagram.png`](docs/system%20diagram.png) |
+| Functional and non-functional requirements | [`docs/Functional and Non-Functional Requirements.md`](docs/Functional%20and%20Non-Functional%20Requirements.md) |
+
+GitHub Pages landing page (optional): [`docs/index.html`](docs/index.html).
+
 ## Getting Started
 
 ### Prerequisites
