@@ -79,17 +79,16 @@ export async function authenticatedRequest(
   const { NextRequest } = await import("next/server");
   const token = await signToken({ userId: opts.userId, email: opts.email });
 
-  const init: RequestInit & { headers: Record<string, string> } = {
-    method: opts.method,
-    headers: {
-      Cookie: `token=${token}`,
-    },
+  const headers: Record<string, string> = {
+    Cookie: `token=${token}`,
   };
-
   if (opts.body) {
-    init.body = JSON.stringify(opts.body);
-    init.headers["Content-Type"] = "application/json";
+    headers["Content-Type"] = "application/json";
   }
 
-  return new NextRequest(new URL(url, "http://localhost:3000"), init);
+  return new NextRequest(new URL(url, "http://localhost:3000"), {
+    method: opts.method,
+    headers,
+    ...(opts.body ? { body: JSON.stringify(opts.body) } : {}),
+  });
 }
